@@ -1,0 +1,1 @@
+youtube-dl --download-archive ./en-downloaded.txt --no-overwrites -f mp4 --restrict-filenames --youtube-skip-dash-manifest --prefer-ffmpeg --socket-timeout 20  -iwc --write-info-json -k --write-srt --sub-format ttml --sub-lang en --convert-subs vtt  https://www.youtube.com/watch?v=qSacuVNWdtI -o inter/

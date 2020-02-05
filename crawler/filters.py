@@ -1,5 +1,5 @@
 import re
-from crawler.youtube_helpers import remove_overlapping_subtitles, \
+from youtube_helpers import remove_overlapping_subtitles, \
     normalize_subtitle, leave_alphanum_characters, merge_subtitles, _get_transcript_google_web_asr
 import random
 from Levenshtein import ratio
@@ -142,13 +142,24 @@ class GoogleRandomSubsetWERFilter(BaseFilter):
         subtitles = input["subtitles"]
         subset = random.sample(subtitles, self.num_samples_to_test)
 
-        transcripts = [(s, _get_transcript_google_web_asr(s)) for s in subset]
+        transcripts = []
+        for s in subset:
+            s['video_file'] = input['video_file']
+            transcripts.append((s, _get_transcript_google_web_asr(s)))
+
         transcripts = [(t, s) for (t, s) in transcripts if s is not None]
         if len(transcripts) == 0:
             #filter removes all the subtitles, as potentially unreliable sample
             subtitles = []
         else:
-            overlap_ratio = [ratio(t["phrase"].lower(), s.lower()) for (t, s) in transcripts]
+
+            # for (t,s) in transcripts:
+            #     print(s)
+
+
+
+            overlap_ratio = [ratio(t["original_phrase"].lower(), s.lower()) for (t, s) in transcripts]
+            print(overlap_ratio)
             passed_threshold =  sum(overlap_ratio) / len(overlap_ratio) > self.mean_wer_threshold
             if not passed_threshold:
                 #removing all subtitles, as potentially unreliable

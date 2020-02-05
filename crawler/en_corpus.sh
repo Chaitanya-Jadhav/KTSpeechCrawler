@@ -4,8 +4,8 @@ trap "exit" INT
 target_dir=$1
 filter_dir=$2
 
-declare -a arr=("and" "the" "on"  "in" "is" "to" "of" "a" "have" "it" "for" "not" "with" "as" "you" "do" "this" "but" "his" "by" "from" "they" "we" "say" "her" "she" "or" "an" "will"  "my"  "one"  "all" "would"  "there"  "their"  "what"  "up"  "if" "about"  "who"  "which"  "go"  "when" "make" "can" "like" "time"  "just" "him"  "take"  "people" "into" "good"  "some"  "could"  "them" "see" "other" "only"  "then" "come"  "its" "also" "over" "think" "also" "back" "after" "use" "two" "how" "our" "work" "first" "well" "way" "even" "new" "want" "because" "any" "these" "give" "day" "most" "us" "time" "person" "year" "get" "know" )
-for i in `seq 1 30`;
+declare -a arr=("SBI" )
+for i in `seq 1 2`;
 do
     echo "PAGE="$i
     for kw in "${arr[@]}"

@@ -1,0 +1,6 @@
+youtube-dl --download-archive ./en-downloaded.txt --no-overwrites -f mp4 --restrict-filenames --youtube-skip-dash-manifest --prefer-ffmpeg --socket-timeout 20 -iwc --write-info-json -k --write-srt --sub-format ttml --sub-lang en --convert-subs vtt  https://www.youtube.com/watch?v=qxls3cYg8to -o "inter/%(id)s%(title)s.%(ext)s"
+
+Use -v if url open error
+
+python3 ./crawler/process.py inter/cCBFC8LmNDELec-6_Simplex_Algorithm_-_Initialization_and_Iteration.mp4 final
+

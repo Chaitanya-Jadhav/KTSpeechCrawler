@@ -6,7 +6,7 @@ from webvtt import WebVTT
 import copy
 import tempfile
 import shutil
-from crawler.utils import extract_audio_part_segment, get_ts_seconds
+from utils import extract_audio_part_segment, get_ts_seconds
 from path import Path
 import datetime
 # from datetime import datetime
@@ -309,7 +309,6 @@ def _get_transcript_google_web_asr(t):
             r = sr.Recognizer()
             with sr.AudioFile(f.name) as source:
                 audio = r.record(source)
-
                 return r.recognize_google(audio)
     except Exception as e:
         print(e)

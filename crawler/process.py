@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+import subprocess
 import sys
 import os
 import json
@@ -6,12 +6,11 @@ import io
 import termcolor
 import re
 from tqdm import tqdm
-from crawler.youtube_helpers import get_hash, getsize
-from crawler.utils import extract_audio_part_segment
-from crawler.filters import Pipeline, OverlappingSubtitlesRemover, SubtitleCaptionTextFilter, SubtitleMerger,\
-    CaptionLengthFilter, CaptionRegexMatcher, CaptionDurationFilter, CaptionLeaveOnlyAlphaNumCharacters, CaptionNormalizer
-from crawler.youtube_helpers import load_all_subtitles
-
+from youtube_helpers import get_hash, getsize
+from utils import extract_audio_part_segment
+from filters import Pipeline, OverlappingSubtitlesRemover, SubtitleCaptionTextFilter, SubtitleMerger,\
+    CaptionLengthFilter, CaptionRegexMatcher, CaptionDurationFilter, CaptionLeaveOnlyAlphaNumCharacters, CaptionNormalizer, GoogleRandomSubsetWERFilter
+from youtube_helpers import load_all_subtitles
 
 class RESULT:
     GOOGLE_TEST_NOT_PASSED = 0
@@ -21,6 +20,7 @@ class RESULT:
 good_chars_regexp = re.compile(r"^[A-Za-z0-9\,\.\-\?\"\'\’\!\“\s\;\:\“\”\–\‘\’\’\/\\]+$", re.IGNORECASE)
 pipeline = Pipeline([
     OverlappingSubtitlesRemover(),
+    GoogleRandomSubsetWERFilter(),
     SubtitleCaptionTextFilter(),
     CaptionNormalizer(),
     CaptionRegexMatcher(good_chars_regexp),
@@ -30,9 +30,10 @@ pipeline = Pipeline([
     CaptionDurationFilter(min_length=1, max_length=20.0)
 ])
 
-
 if __name__ == "__main__":
     video_file = sys.argv[1]
+    basename=os.path.basename(video_file)
+    Name=basename.replace('.mp4','')
     target_dir = sys.argv[2]
 
     subtitle_file = video_file.replace('.mp4', '.en.vtt')
@@ -65,19 +66,17 @@ if __name__ == "__main__":
         filtered_subtitles = filtered_input["subtitles"]
 
         termcolor.cprint("Writing {} samples".format(len(filtered_subtitles)), color="cyan")
+        count=1
+        target_txt_file = os.path.join(target_dir, "Transcript.txt")
+        wav_file_dir = os.path.join(target_dir, "wav")
+        metadata_dir = os.path.join(target_dir, "metadata")
+        os.makedirs(wav_file_dir, exist_ok=True)
+        #os.makedirs(metadata_dir, exist_ok=True)
+
         for t in tqdm(filtered_subtitles):
-            hash = get_hash(subtitle_file + t["original_phrase"] + str(t["ts_start"]))
-            wav_file_dir = os.path.join(target_dir, "wav", hash[:2])
-            txt_file_dir = os.path.join(target_dir, "txt", hash[:2])
-            metadata_dir = os.path.join(target_dir, "metadata", hash[:2])
-
-            os.makedirs(wav_file_dir, exist_ok=True)
-            os.makedirs(txt_file_dir, exist_ok=True)
-            os.makedirs(metadata_dir, exist_ok=True)
-
-            target_wav_file = os.path.join(wav_file_dir, hash + ".wav")
-            target_txt_file = os.path.join(txt_file_dir, hash + ".txt")
-            target_metadata_file = os.path.join(metadata_dir, hash + ".json")
+            audio_name=Name+'_'+str(count)
+            target_wav_file = os.path.join(wav_file_dir, audio_name+ ".wav")
+            #target_metadata_file = os.path.join(metadata_dir, audio_name+ ".json")
 
             text = t["original_phrase"]
             if len(text) == 0:
@@ -85,17 +84,18 @@ if __name__ == "__main__":
             if not os.path.exists(target_wav_file) or not os.path.exists(target_txt_file):
                 extract_audio_part_segment(video_file, t["ts_start"], t["ts_end"], target_wav_file)
 
-                with io.open(target_txt_file, "w", encoding='utf-8') as f:
-                    f.write(text)
+                with io.open(target_txt_file, "a", encoding='utf-8') as f:
+                    f.write('\n'+audio_name+' '+text)
 
-                with io.open(target_metadata_file, "w", encoding='utf-8') as f:
-                    t["ts_start"] = str(t["ts_start"])
-                    t["ts_end"] = str(t["ts_end"])
-                    t["metadata"] = metadata
-                    json.dump(t, f)
+                #with io.open(target_metadata_file, "w", encoding='utf-8') as f:
+                    #t["ts_start"] = str(t["ts_start"])
+                    #t["ts_end"] = str(t["ts_end"])
+                    #t["metadata"] = metadata
+                    #json.dump(t, f)
 
                 assert os.path.exists(target_txt_file) and os.path.exists(target_wav_file) \
                        and getsize(target_wav_file) > 4 * 1024, "{} not created".format(target_wav_file)
+                count+=1
     except Exception as e:
         termcolor.cprint(e, color="red")
     finally:
